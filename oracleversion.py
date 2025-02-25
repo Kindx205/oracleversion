@@ -5,12 +5,10 @@ import threading
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from faker import Faker
-from kivy.app import App
-from kivy.uix.button import Button
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.spinner import Spinner
-from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
+from flask import Flask, request, jsonify
+
+# Initialize Flask API
+app = Flask(__name__)
 
 # Initialize Faker for generating random user agents
 fake = Faker()
@@ -39,15 +37,18 @@ def human_like_browsing(driver, url, duration):
             driver.execute_script("arguments[0].scrollIntoView();", link)
             time.sleep(random.uniform(2, 5))
             link.click()
-            time.sleep(random.uniform(5, 15))  # Added more variation for natural behavior
+            time.sleep(random.uniform(5, 15))
         else:
-            time.sleep(random.uniform(5, 10))  # Idle time to simulate thinking
+            time.sleep(random.uniform(5, 10))
 
 def start_bot_visit(url, duration):
     try:
         options = Options()
         options.add_argument(f"user-agent={fake.user_agent()}")
-        options.add_argument("--headless=new")
+        options.add_argument("--headless")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
         proxy = get_random_proxy()
         options.add_argument(f"--proxy-server=http://{proxy}")
         driver = webdriver.Chrome(options=options)
@@ -59,8 +60,8 @@ def start_bot_visit(url, duration):
 def run_bots(urls, num_bots, duration):
     stop_event.clear()
     threads = []
-    for _ in range(num_bots):
-        url = random.choice(urls)  # Randomly choose between multiple URLs
+    for _ in range(min(num_bots, 5)):  # Limit max bots to prevent overload
+        url = random.choice(urls)
         thread = threading.Thread(target=start_bot_visit, args=(url, duration))
         thread.start()
         threads.append(thread)
@@ -71,52 +72,19 @@ def run_bots(urls, num_bots, duration):
 def stop_bots():
     stop_event.set()
 
-class TrapAppUI(App):
-    def build(self):
-        layout = BoxLayout(orientation='vertical')
-        
-        self.url_labels = [Label(text=f"Enter Target URL {i+1}:") for i in range(4)]
-        self.url_inputs = [TextInput(text=f"https://example{i+1}.com", multiline=False) for i in range(4)]
-        
-        for label, input_field in zip(self.url_labels, self.url_inputs):
-            layout.add_widget(label)
-            layout.add_widget(input_field)
-        
-        self.bots_label = Label(text="Number of Bots:")
-        layout.add_widget(self.bots_label)
-        
-        self.bots_spinner = Spinner(text="10", values=[str(i) for i in range(1, 101)])
-        layout.add_widget(self.bots_spinner)
-        
-        self.duration_label = Label(text="Visit Duration (Minutes):")
-        layout.add_widget(self.duration_label)
-        
-        self.duration_spinner = Spinner(text="5", values=[str(i) for i in range(1, 21)])
-        layout.add_widget(self.duration_spinner)
-        
-        self.start_button = Button(text="Start Bots")
-        self.start_button.bind(on_press=self.start_bots)
-        layout.add_widget(self.start_button)
-        
-        self.stop_button = Button(text="Stop Bots")
-        self.stop_button.bind(on_press=self.stop_bots)
-        layout.add_widget(self.stop_button)
-        
-        return layout
-    
-    def start_bots(self, instance):
-        urls = [input_field.text.strip() for input_field in self.url_inputs if input_field.text.strip()]
-        if not urls:
-            print("Invalid URLs. Please enter at least one valid link.")
-            return
-        num_bots = int(self.bots_spinner.text)
-        duration = int(self.duration_spinner.text) * 60  # Convert minutes to seconds
-        print(f"Starting {num_bots} bots across {len(urls)} URLs for {duration//60} minutes")
-        threading.Thread(target=run_bots, args=(urls, num_bots, duration)).start()
-    
-    def stop_bots(self, instance):
-        stop_bots()
-        print("Bots Stopped")
+@app.route('/start_bots', methods=['POST'])
+def start_bots():
+    data = request.json
+    urls = data.get("urls", [])
+    num_bots = int(data.get("num_bots", 5))
+    duration = int(data.get("duration", 5)) * 60  # Convert to seconds
+    threading.Thread(target=run_bots, args=(urls, num_bots, duration)).start()
+    return jsonify({"status": "Bots started"})
+
+@app.route('/stop_bots', methods=['POST'])
+def api_stop_bots():
+    stop_bots()
+    return jsonify({"status": "Bots stopped"})
 
 if __name__ == "__main__":
-    TrapAppUI().run()
+    app.run(host="0.0.0.0", port=8080)
