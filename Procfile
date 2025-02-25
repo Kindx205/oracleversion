@@ -1,1 +1,1 @@
-worker: python oracleversion
+web: python oracleversion.py
