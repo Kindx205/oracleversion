@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options
 from faker import Faker
 from flask import Flask, request, jsonify
 
-# Initialize Flask API
+# Initialize Flask app
 app = Flask(__name__)
 
 # Initialize Faker for generating random user agents
@@ -37,18 +37,15 @@ def human_like_browsing(driver, url, duration):
             driver.execute_script("arguments[0].scrollIntoView();", link)
             time.sleep(random.uniform(2, 5))
             link.click()
-            time.sleep(random.uniform(5, 15))
+            time.sleep(random.uniform(5, 15))  # Added more variation for natural behavior
         else:
-            time.sleep(random.uniform(5, 10))
+            time.sleep(random.uniform(5, 10))  # Idle time to simulate thinking
 
 def start_bot_visit(url, duration):
     try:
         options = Options()
         options.add_argument(f"user-agent={fake.user_agent()}")
-        options.add_argument("--headless")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--headless=new")
         proxy = get_random_proxy()
         options.add_argument(f"--proxy-server=http://{proxy}")
         driver = webdriver.Chrome(options=options)
@@ -60,8 +57,8 @@ def start_bot_visit(url, duration):
 def run_bots(urls, num_bots, duration):
     stop_event.clear()
     threads = []
-    for _ in range(min(num_bots, 5)):  # Limit max bots to prevent overload
-        url = random.choice(urls)
+    for _ in range(num_bots):
+        url = random.choice(urls)  # Randomly choose between multiple URLs
         thread = threading.Thread(target=start_bot_visit, args=(url, duration))
         thread.start()
         threads.append(thread)
@@ -76,15 +73,17 @@ def stop_bots():
 def start_bots():
     data = request.json
     urls = data.get("urls", [])
-    num_bots = int(data.get("num_bots", 5))
-    duration = int(data.get("duration", 5)) * 60  # Convert to seconds
+    num_bots = data.get("num_bots", 10)
+    duration = data.get("duration", 5) * 60  # Convert minutes to seconds
+    if not urls:
+        return jsonify({"error": "Invalid URLs. Please enter at least one valid link."}), 400
     threading.Thread(target=run_bots, args=(urls, num_bots, duration)).start()
-    return jsonify({"status": "Bots started"})
+    return jsonify({"message": f"Starting {num_bots} bots across {len(urls)} URLs for {duration//60} minutes"})
 
 @app.route('/stop_bots', methods=['POST'])
-def api_stop_bots():
+def stop_bots_route():
     stop_bots()
-    return jsonify({"status": "Bots stopped"})
+    return jsonify({"message": "Bots Stopped"})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host='0.0.0.0', port=5000)
