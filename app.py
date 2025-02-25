@@ -37,7 +37,10 @@ def human_like_browsing(driver, url, duration):
             link = random.choice(links)
             driver.execute_script("arguments[0].scrollIntoView();", link)
             time.sleep(random.uniform(2, 5))
-            link.click()
+            try:
+                link.click()
+            except:
+                pass  # Handle elements not interactable
             time.sleep(random.uniform(5, 15))  # Added more variation for natural behavior
         else:
             time.sleep(random.uniform(5, 10))  # Idle time to simulate thinking
