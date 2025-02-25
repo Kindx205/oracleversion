@@ -1,5 +1,5 @@
-requests
-selenium
 flask
 gunicorn
+selenium
+requests
 faker
