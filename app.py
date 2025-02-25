@@ -6,6 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from faker import Faker
 from flask import Flask, request, jsonify
+import os
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -86,4 +87,5 @@ def stop_bots_route():
     return jsonify({"message": "Bots Stopped"})
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8000)
+    port = int(os.environ.get("PORT", 8000))  # Default to 8000 for Koyeb
+    app.run(host='0.0.0.0', port=port)
