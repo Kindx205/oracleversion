@@ -1,4 +1,4 @@
-requests  
-selenium  
-faker  
-kivy  
+requests
+selenium
+flask
+faker
