@@ -1,0 +1,7 @@
+selenium
+undetected-chromedriver
+fake-useragent
+requests
+beautifulsoup4
+anticaptchaofficial
+pyautogui
