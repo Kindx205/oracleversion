@@ -1,6 +1,6 @@
 selenium
-undetected-chromedriver
-fake-useragent
+undetected_chromedriver
+fake_useragent
 requests
 beautifulsoup4
 anticaptchaofficial
