@@ -48,7 +48,7 @@ def get_free_proxies():
 
 def is_proxy_working(proxy):
     try:
-        test_url = "https://www.google.com"
+        test_url = "https://coderelic.odoo.com/blog/code-relic-a-revolution-2/mastering-core-programming-concepts-8"
         response = requests.get(test_url, proxies={"http": proxy, "https": proxy}, timeout=5)
         return response.status_code == 200
     except:
@@ -129,7 +129,7 @@ def blog_reader(driver):
 def solve_captcha(driver):
     solver = recaptchaV2()
     solver.set_verbose(1)
-    solver.set_key("YOUR_ANTI_CAPTCHA_API_KEY")  # Replace with actual API key
+    solver.set_key("de5e82ac743c62f4d964403af61ccdd4")  # Replace with actual API key
     site_key = "EXTRACTED_SITE_KEY"  # Extract site key dynamically
     page_url = driver.current_url
     captcha_response = solver.solve_and_return_solution(page_url, site_key)
@@ -156,7 +156,7 @@ def run_test(target_url, visit_goal):
 def start_tests():
     threads = []
     visit_goal = 3000
-    for site in ["hubpages.com", "vocal.media"]:
+    for site in ["https://coderelic.odoo.com", "vocal.media"]:
         thread = threading.Thread(target=run_test, args=(site, visit_goal,))
         threads.append(thread)
         thread.start()
